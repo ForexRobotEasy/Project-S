@@ -1,0 +1,118 @@
+
+//+------------------------------------------------------------------+
+//|                                                   Project S.mq5 |
+//|                  Developed by Forex Robot Easy Team               |
+//|                           www.forexroboteasy.com                  |
+//+------------------------------------------------------------------+
+
+//--- Include necessary libraries
+#include <Trade\Trade.mqh>
+
+//--- Define input parameters
+input string Pair = 'GOLD';                        // Trading pair
+input ENUM_TIMEFRAMES Timeframe = PERIOD_M1;       // Timeframe
+input int IndicatorPeriod = 14;                    // Period for the indicators
+
+//--- Define indicator handles
+int IndicatorHandle1, IndicatorHandle2;
+
+//--- Define trade object
+CTrade Robot;
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                        Indicator Functions                       |
+//|                                                                  |
+//+------------------------------------------------------------------+
+
+//--- Function to initialize the indicators
+void InitializeIndicators()
+{
+   //--- Create the first indicator
+   IndicatorHandle1 = iCustom(_Symbol, Timeframe, 'Indicator1', IndicatorPeriod);
+   
+   //--- Create the second indicator
+   IndicatorHandle2 = iCustom(_Symbol, Timeframe, 'Indicator2', IndicatorPeriod);
+}
+
+//--- Function to evaluate the indicators and determine trade entry points
+bool EvaluateIndicators()
+{
+   //--- Evaluate the first indicator
+   double indicator1 = iCustom(_Symbol, Timeframe, 'Indicator1', IndicatorPeriod, 0);
+   
+   //--- Evaluate the second indicator
+   double indicator2 = iCustom(_Symbol, Timeframe, 'Indicator2', IndicatorPeriod, 0);
+   
+   //--- Determine trade entry points based on indicator values
+   if(indicator1 > 0 && indicator2 > 0)
+      return true;
+   else
+      return false;
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                        Trading Functions                         |
+//|                                                                  |
+//+------------------------------------------------------------------+
+
+//--- Function to open a new trade
+void OpenTrade()
+{
+   //--- Define trade parameters
+   double lotSize = 0.1;
+   double stopLoss = 100;
+   double takeProfit = 200;
+   
+   //--- Open a new trade
+   Robot.Buy(lotSize, _Symbol, 0, 0, stopLoss, takeProfit);
+}
+
+//--- Function to close an existing trade
+void CloseTrade()
+{
+   //--- Close the current trade
+   Robot.Close(0, 0);
+}
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                          Project S EA                             |
+//|                                                                  |
+//+------------------------------------------------------------------+
+
+//--- Expert Advisor initialization function
+int OnInit()
+{
+   //--- Initialize the trade object
+   Robot.Init();
+   
+   //--- Initialize the indicators
+   InitializeIndicators();
+   
+   return(INIT_SUCCEEDED);
+}
+
+//--- Expert Advisor start function
+void OnTick()
+{
+   //--- Check if the indicators signal a trade entry point
+   if(EvaluateIndicators())
+   {
+      //--- Open a new trade
+      OpenTrade();
+   }
+   else
+   {
+      //--- Close any existing trade
+      CloseTrade();
+   }
+}
+
+//--- Expert Advisor deinitialization function
+void OnDeinit(const int reason)
+{
+   //--- Deinitialize the trade object
+   Robot.Deinit();
+}
